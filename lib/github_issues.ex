@@ -1,18 +1,22 @@
-defmodule GithubIssues do
-  @moduledoc """
-  Documentation for GithubIssues.
-  """
+defmodule Issues.GithubIssues do
+  @headers [{"User-agent", "Elixir programming"}]
+  @github_url Application.get_env(:github_issues, :github_url)
 
-  @doc """
-  Hello world.
+  def fetch(user, project) do
+    issues_url(user, project)
+    |> HTTPoison.get(@headers)
+    |> handle_response
+  end
 
-  ## Examples
+  def handle_response({:ok, %{status_code: 200, body: json}}) do
+    {:ok, Poison.Parser.parse!(json)}
+  end
 
-      iex> GithubIssues.hello
-      :world
+  def handle_response({_, %{status_code: _, body: json}}) do
+    {:error, Poison.Parser.parse!(json)}
+  end
 
-  """
-  def hello do
-    :world
+  def issues_url(user, project) do
+    "#{@github_url}/repos/#{user}/#{project}/issues"
   end
 end
